@@ -58,6 +58,12 @@ static void check_node(semantic_T* sem, AST_T* node)
 
     switch (node->type) {
     case AST_VARIABLE_DEFINITION:
+        if (scope_has_current_depth(sem, node->variable_definition_varname)) {
+            token_T tok = make_fake_token(node, node->variable_definition_varname);
+            diagnostic_error(sem->diag, &tok,
+                "re-declaracao da variavel '%s' no mesmo escopo", node->variable_definition_varname);
+        }
+
         check_node(sem, node->variable_definition_value);
         scope_declare(sem, node->variable_definition_varname, node->variable_definition_type);
         break;
