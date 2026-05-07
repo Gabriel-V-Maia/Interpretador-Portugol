@@ -9,19 +9,7 @@
 
 Projeto focado no desenvolvimento de um interpretador e compilador para a linguagem Portugol, escrito inteiramente em C. O sistema realiza o processamento completo do código, desde a análise inicial até a geração de uma Árvore de Sintaxe Abstrata (AST) com suporte para transpilação para C.
 
-A sintaxe é compatível com o padrão Portugol-Webstudio.
-
-## Funcionamento do Sistema
-
-O processamento do código segue um fluxo linear dividido em camadas de responsabilidade:
-
-1. Entrada: Leitura do arquivo fonte .por para a memória.
-2. Análise Léxica: Conversão do texto em tokens (identificadores, números, strings).
-3. Análise Sintática: Construção da AST e validação da estrutura gramatical.
-4. Pré-processamento: Resolução de diretivas de importação e injeção de dependências.
-5. Análise Semântica: Verificação de tipos e escopos de variáveis.
-6. Geração de Código: Conversão da AST final para código C equivalente.
-7. Saída: Compilação via GCC para geração do executável nativo.
+A sintaxe é inspirada com o padrão do Portugol-Webstudio, porém sofreu modificações.
 
 ## Exemplos de Código
 
@@ -56,18 +44,6 @@ programa {
   }
 }
 ```
-
-## Progresso do Desenvolvimento
-
-| Componente | Situação |
-| :--- | :--- |
-| Lexer | Concluído |
-| Parser | Em andamento |
-| Estrutura AST | Concluído |
-| Pré-processador | Em desenvolvimento |
-| Geração de Código C | Pendente |
-| Diagnósticos de Erro | Concluído |
-| Debugger Interno | Concluído |
 
 ## Instruções de Uso
 
