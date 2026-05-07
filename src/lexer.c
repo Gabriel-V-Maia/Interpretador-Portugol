@@ -146,6 +146,26 @@ static token_T* stamp(token_T* token, int line, int col)
     return token;
 }
 
+static char* lexer_collect_interp_expression(lexer_T* lexer)
+{
+    char* expr = calloc(1, sizeof(char));
+    expr[0] = '\0';
+
+    while (lexer->currentChar != '}' && lexer->currentChar != '\0')
+    {
+        char* s = lexer_get_current_char_as_string(lexer);
+        expr = realloc(expr, strlen(expr) + strlen(s) + 1);
+        strcat(expr, s);
+        free(s);
+        lexer_advance(lexer);
+    }
+
+    if (lexer->currentChar == '}')
+        lexer_advance(lexer); 
+
+    return expr;
+}
+
 token_T* lexer_collect_string(lexer_T* lexer)
 {
     int start_line = lexer->line;
@@ -154,55 +174,29 @@ token_T* lexer_collect_string(lexer_T* lexer)
     lexer->interp_queue_size = 0;
     lexer->interp_queue_pos  = 0;
 
-    lexer_advance(lexer);
+    lexer_advance(lexer); 
 
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
 
     while (lexer->currentChar != '"' && lexer->currentChar != '\0')
     {
-        if (lexer->currentChar == '$')
+        if (lexer->currentChar == '$' && lexer_peek(lexer, 1) == '{')
         {
-            lexer_advance(lexer);
-            if (lexer->currentChar == '{')
-            {
-                lexer_advance(lexer);
-
-                if (strlen(value) > 0) {
-                    lexer->interp_queue[lexer->interp_queue_size++] =
-                        stamp(init_token(TOKEN_STRING_PART, value), start_line, start_col);
-                    value = calloc(1, sizeof(char));
-                    value[0] = '\0';
-                }
-
-                char* expr = calloc(1, sizeof(char));
-                expr[0] = '\0';
-
-                while (lexer->currentChar != '}' && lexer->currentChar != '\0')
-                {
-                    char* s = lexer_get_current_char_as_string(lexer);
-                    expr = realloc(expr, strlen(expr) + strlen(s) + 1);
-                    strcat(expr, s);
-                    free(s);
-                    lexer_advance(lexer);
-                }
-
-                lexer_advance(lexer);
+            if (strlen(value) > 0) {
                 lexer->interp_queue[lexer->interp_queue_size++] =
-                    stamp(init_token(TOKEN_INTERP_EXPR, expr), start_line, start_col);
-                continue;
+                    stamp(init_token(TOKEN_STRING_PART, value), start_line, start_col);
+                value = calloc(1, sizeof(char));
+                value[0] = '\0';
             }
-            else
-            {
-                value = realloc(value, strlen(value) + 2);
-                strcat(value, "$");
-                char* s = lexer_get_current_char_as_string(lexer);
-                value = realloc(value, strlen(value) + strlen(s) + 1);
-                strcat(value, s);
-                free(s);
-                lexer_advance(lexer);
-                continue;
-            }
+
+            lexer_advance(lexer); 
+            lexer_advance(lexer); 
+            char* expr = lexer_collect_interp_expression(lexer);
+            lexer->interp_queue[lexer->interp_queue_size++] =
+                stamp(init_token(TOKEN_INTERP_EXPR, expr), start_line, start_col);
+            
+            continue;
         }
 
         char* s = lexer_get_current_char_as_string(lexer);
@@ -215,11 +209,12 @@ token_T* lexer_collect_string(lexer_T* lexer)
     lexer_advance(lexer);
 
     if (lexer->interp_queue_size > 0) {
-        if (strlen(value) > 0)
+        if (strlen(value) > 0) {
             lexer->interp_queue[lexer->interp_queue_size++] =
                 stamp(init_token(TOKEN_STRING_PART, value), start_line, start_col);
-        else
+        } else {
             free(value);
+        }
 
         token_T* first = lexer->interp_queue[0];
         lexer->interp_queue_pos = 1;
