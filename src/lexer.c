@@ -52,17 +52,6 @@ lexer_T* init_lexer(char* contents, Debugger* debugger_instance)
     lexer->interp_queue_pos  = 0;
     return lexer;
 }
-
-void lexer_skip_comment(lexer_T* lexer)
-{
-    if (lexer->currentChar == '#') 
-    {
-        while (lexer->currentChar != '\n' && lexer->currentChar != '\0') {
-            lexer_advance(lexer);
-        }
-    }
-}
-
 void lexer_advance(lexer_T* lexer)
 {
     if (lexer->currentChar != '\0' && lexer->index < lexer->contents_len)
@@ -78,6 +67,37 @@ void lexer_advance(lexer_T* lexer)
     }
 }
 
+void lexer_go_back(lexer_T *lexer)
+{
+    if (lexer->index == 0)
+        return;
+
+    lexer->index--;
+
+    if (lexer->contents[lexer->index] == '\n') {
+        lexer->line--;
+        lexer->column = 1;
+        
+        int temp_idx = lexer->index - 1;
+        while (temp_idx >= 0 && lexer->contents[temp_idx] != '\n') {
+            lexer->column++;
+            temp_idx--;
+        }
+    } else {
+        lexer->column--;
+    }
+
+    lexer->currentChar = lexer->contents[lexer->index];
+}
+
+char lexer_peek(lexer_T* lexer, int offset)
+{
+    unsigned int target_idx = lexer->index + offset;
+    if (target_idx >= lexer->contents_len)
+        return '\0';
+    return lexer->contents[target_idx];
+}
+
 void lexer_skip_whitespace(lexer_T* lexer)
 {
     while (isspace(lexer->currentChar))
@@ -89,6 +109,27 @@ token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
     lexer_advance(lexer);
     return token;
 }
+
+
+void lexer_skip_comment(lexer_T* lexer)
+{
+    if (lexer->currentChar == '#') 
+    {
+        while (lexer->currentChar != '\n' && lexer->currentChar != '\0') {
+            lexer_advance(lexer);
+        }
+    }
+    else if (lexer->currentChar == '/' && lexer_peek(lexer, 1) == '/')
+    {
+        lexer_advance(lexer);
+        lexer_advance(lexer);
+
+        while (lexer->currentChar != '\n' && lexer->currentChar != '\0') {
+            lexer_advance(lexer);
+        }
+    }
+}
+
 
 char* lexer_get_current_char_as_string(lexer_T* lexer)
 {
@@ -248,7 +289,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
             continue;
         }
 
-        if (lexer->currentChar == '#') {
+        if (lexer->currentChar == '#' || (lexer->currentChar == '/' && lexer_peek(lexer, 1) == '/')) {
             lexer_skip_comment(lexer);
             continue;
         }
