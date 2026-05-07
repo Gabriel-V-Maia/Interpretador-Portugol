@@ -52,6 +52,16 @@ static token_T make_fake_token(AST_T* node, const char* value)
     return tok;
 }
 
+static int scope_has_current_depth(semantic_T* sem, const char* name)
+{
+    scope_T* s = &sem->scopes[sem->depth];
+    for (int i = 0; i < s->count; i++) {
+        if (strcmp(s->vars[i], name) == 0) return 1;
+    }
+    return 0;
+}
+
+
 static void check_node(semantic_T* sem, AST_T* node)
 {
     if (!node) return;
