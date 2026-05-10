@@ -16,6 +16,10 @@ A sintaxe é inspirada com o padrão do Portugol-Webstudio, porém sofreu modifi
 
 A logo foi criada por [Willian Guedes](https://github.com/Willian-Guedes)
 
+## Aprenda portugol
+
+Estou documentando a linguagem [aqui!](https://gabriel-v-maia.github.io/portugol-docs/)
+
 ## Exemplos de Código
 
 ### Sequência de Fibonacci
