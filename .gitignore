@@ -1,9 +1,11 @@
 # Prerequisites
 *.d
+runner
 
 # my personal scripts
 *.sh
 
+output
 
 build/*
 build
