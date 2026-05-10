@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
   codegen_emit(cg, root);
   fclose(cg->output);
 
-  codegen_compile("build/output.c", "build/output");
+  codegen_compile("build/output.c", "./output");
 
   
   if (debug) {
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
       printf("\n");
   }
 
-  int executed = system("./build/output");
+  int executed = system("./output");
   if (executed == -1)
     PANIC("Couldn't execute the outputted file");
   
