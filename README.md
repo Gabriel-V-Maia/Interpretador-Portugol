@@ -1,4 +1,7 @@
 # Interpretador Portugol
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Gabriel-V-Maia/portugol-docs/refs/heads/main/overrides/assets/LOGO.png" width=150>
+</div>
 
 <p align="center">
   <img src="https://img.shields.io/badge/linguagem-C-blue?style=for-the-badge&logo=c">
@@ -10,6 +13,8 @@
 Projeto focado no desenvolvimento de um interpretador e compilador para a linguagem Portugol, escrito inteiramente em C. O sistema realiza o processamento completo do código, desde a análise inicial até a geração de uma Árvore de Sintaxe Abstrata (AST) com suporte para transpilação para C.
 
 A sintaxe é inspirada com o padrão do Portugol-Webstudio, porém sofreu modificações.
+
+A logo foi criada por [Willian Guedes](https://github.com/Willian-Guedes)
 
 ## Exemplos de Código
 
