@@ -3,13 +3,34 @@
 #include <string.h>
 #include <stdio.h>
 
+// todo: remember to improve this in the future
+static const char* builtins[] = {
+    "escreva", "leia", "sair",
+    "tamanho", "potencia", "raiz", "absoluto", "arredondar",
+    "piso", "teto", "aleatorio", "concatenar", "maiusculo",
+    "minusculo", "contem", "substituir", "fatiar",
+    "paraInteiro", "paraReal", "paraCadeia",
+    "escreva_linha", "leia_linha", "limpar",
+    NULL
+};
+
+static int is_builtin(const char* name)
+{
+    for (int i = 0; builtins[i] != NULL; i++)
+        if (strcmp(builtins[i], name) == 0) return 1;
+    return 0;
+}
+
 semantic_T* init_semantic(Diagnostic* diag)
 {
     semantic_T* sem = calloc(1, sizeof(semantic_T));
-    sem->depth = 0;
-    sem->diag  = diag;
+    sem->depth      = 0;
+    sem->diag       = diag;
+    sem->func_count = 0;
     return sem;
 }
+
+/* ---------- escopo de variáveis ---------- */
 
 static void scope_declare(semantic_T* sem, const char* name, const char* type)
 {
@@ -30,6 +51,14 @@ static int scope_has(semantic_T* sem, const char* name)
     return 0;
 }
 
+static int scope_has_current_depth(semantic_T* sem, const char* name)
+{
+    scope_T* s = &sem->scopes[sem->depth];
+    for (int i = 0; i < s->count; i++)
+        if (strcmp(s->vars[i], name) == 0) return 1;
+    return 0;
+}
+
 static void scope_push(semantic_T* sem)
 {
     sem->depth++;
@@ -42,6 +71,20 @@ static void scope_pop(semantic_T* sem)
     sem->depth--;
 }
 
+static void func_declare(semantic_T* sem, const char* name)
+{
+    if (sem->func_count >= SEMANTIC_MAX_FUNCS) return;
+    sem->funcs[sem->func_count++] = strdup(name);
+}
+
+static int func_exists(semantic_T* sem, const char* name)
+{
+    for (int i = 0; i < sem->func_count; i++)
+        if (strcmp(sem->funcs[i], name) == 0) return 1;
+    return 0;
+}
+
+
 static token_T make_fake_token(AST_T* node, const char* value)
 {
     token_T tok;
@@ -52,33 +95,26 @@ static token_T make_fake_token(AST_T* node, const char* value)
     return tok;
 }
 
-static int scope_has_current_depth(semantic_T* sem, const char* name)
-{
-    scope_T* s = &sem->scopes[sem->depth];
-    for (int i = 0; i < s->count; i++) {
-        if (strcmp(s->vars[i], name) == 0) return 1;
-    }
-    return 0;
-}
-
 
 static void check_node(semantic_T* sem, AST_T* node)
 {
     if (!node) return;
 
     switch (node->type) {
+
     case AST_VARIABLE_DEFINITION:
         if (scope_has_current_depth(sem, node->variable_definition_varname)) {
             token_T tok = make_fake_token(node, node->variable_definition_varname);
             diagnostic_error(sem->diag, &tok,
-                "re-declaracao da variavel '%s' no mesmo escopo", node->variable_definition_varname);
+                "re-declaracao da variavel '%s' no mesmo escopo",
+                node->variable_definition_varname);
         }
-
         check_node(sem, node->variable_definition_value);
-        scope_declare(sem, node->variable_definition_varname, node->variable_definition_type);
+        scope_declare(sem, node->variable_definition_varname,
+                           node->variable_definition_type);
         break;
 
-    case AST_ASSIGN: {
+    case AST_ASSIGN:
         if (!scope_has(sem, node->assign_varname)) {
             token_T tok = make_fake_token(node, node->assign_varname);
             diagnostic_error(sem->diag, &tok,
@@ -86,14 +122,24 @@ static void check_node(semantic_T* sem, AST_T* node)
         }
         check_node(sem, node->assign_value);
         break;
-    }
 
-    case AST_VARIABLE: {
+    case AST_VARIABLE:
         if (!scope_has(sem, node->variable_name)) {
             token_T tok = make_fake_token(node, node->variable_name);
             diagnostic_error(sem->diag, &tok,
                 "variavel '%s' nao foi declarada", node->variable_name);
         }
+        break;
+
+    case AST_FUNCTION_CALL: {
+        const char* fname = node->function_call_name;
+        if (!is_builtin(fname) && !func_exists(sem, fname)) {
+            token_T tok = make_fake_token(node, fname);
+            diagnostic_error(sem->diag, &tok,
+                "funcao '%s' nao foi declarada", fname);
+        }
+        for (size_t i = 0; i < node->function_call_arguments_size; i++)
+            check_node(sem, node->function_call_arguments[i]);
         break;
     }
 
@@ -134,11 +180,6 @@ static void check_node(semantic_T* sem, AST_T* node)
         check_node(sem, node->repita_condition);
         break;
 
-    case AST_FUNCTION_CALL:
-        for (size_t i = 0; i < node->function_call_arguments_size; i++)
-            check_node(sem, node->function_call_arguments[i]);
-        break;
-
     case AST_RETORNE:
         check_node(sem, node->retorne_value);
         break;
@@ -160,13 +201,20 @@ void semantic_check(semantic_T* sem, AST_T* programa)
 {
     for (size_t i = 0; i < programa->compound_size; i++) {
         AST_T* fn = programa->compound_value[i];
+        if (fn->type == AST_FUNCTION_DEF)
+            func_declare(sem, fn->function_def_name);
+    }
+
+    for (size_t i = 0; i < programa->compound_size; i++) {
+        AST_T* fn = programa->compound_value[i];
         if (fn->type != AST_FUNCTION_DEF) continue;
 
         sem->depth = 0;
         sem->scopes[0].count = 0;
 
         for (size_t j = 0; j < fn->function_def_param_count; j++)
-            scope_declare(sem, fn->function_def_param_names[j], fn->function_def_param_types[j]);
+            scope_declare(sem, fn->function_def_param_names[j],
+                               fn->function_def_param_types[j]);
 
         check_node(sem, fn->function_def_body);
     }
