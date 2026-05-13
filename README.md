@@ -2,12 +2,12 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/Gabriel-V-Maia/portugol-docs/refs/heads/main/overrides/assets/LOGO.png" width=150>
 </div>
-
 <p align="center">
   <img src="https://img.shields.io/badge/linguagem-C-blue?style=for-the-badge&logo=c">
   <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge">
   <img src="https://img.shields.io/badge/licença-MIT-green?style=for-the-badge">
   <img src="https://img.shields.io/badge/plataforma-Linux%20%7C%20Windows-lightgrey?style=for-the-badge">
+  <img src="https://img.shields.io/github/actions/workflow/status/Gabriel-V-Maia/Interpretador-Portugol/ci.yml?style=for-the-badge&label=build">
 </p>
 
 Projeto focado no desenvolvimento de um interpretador e compilador para a linguagem Portugol, escrito inteiramente em C. O sistema realiza o processamento completo do código, desde a análise inicial até a geração de uma Árvore de Sintaxe Abstrata (AST) com suporte para transpilação para C.
@@ -31,7 +31,6 @@ programa {
     }
     retorne fib(n - 1) + fib(n - 2)
   }
-
   nulo funcao inicio() {
     escreva("${fib(10)}\n")
   }
@@ -47,7 +46,6 @@ programa {
     }
     retorne n * fat(n - 1)
   }
-
   nulo funcao inicio() {
     escreva("${fat(5)}\n")
   }
@@ -85,7 +83,10 @@ make
 * Criação de biblioteca padrão para entrada e saída de dados.
 * Implementação de suite de testes automatizados para a AST.
 
+## Contribuindo
+
+Contribuições são bem-vindas! Veja o [CONTRIBUTING.md](./CONTRIBUTING.md) para saber como configurar o ambiente, o fluxo de PRs e as convenções do projeto.
+
 ## Licença
 
 Este software é distribuído sob a Licença MIT. Desenvolvido por Gabriel Vinícius da Maia.
-```
