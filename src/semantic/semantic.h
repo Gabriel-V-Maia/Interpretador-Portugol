@@ -4,8 +4,9 @@
 #include "../include/AST.H"
 #include "../diagnostics/diagnostics.h"
 
-#define SEMANTIC_MAX_VARS 256
+#define SEMANTIC_MAX_VARS   256
 #define SEMANTIC_MAX_SCOPES 64
+#define SEMANTIC_MAX_FUNCS  128
 
 typedef struct {
     char* vars[SEMANTIC_MAX_VARS];
@@ -14,9 +15,11 @@ typedef struct {
 } scope_T;
 
 typedef struct {
-    scope_T  scopes[SEMANTIC_MAX_SCOPES];
-    int      depth;
+    scope_T    scopes[SEMANTIC_MAX_SCOPES];
+    int        depth;
     Diagnostic* diag;
+    char*      funcs[SEMANTIC_MAX_FUNCS];
+    int        func_count;
 } semantic_T;
 
 semantic_T* init_semantic(Diagnostic* diag);
